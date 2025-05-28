@@ -25,12 +25,23 @@
       );
     }
 
-    function getPHTTimestamp() {
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-      const pht = new Date(utc + 8 * 3600000);
-      return pht.toISOString().replace("T", " ").slice(0, 19);
-    }
+function getPHTTimestamp() {
+  const now = new Date();
+  // Convert to UTC+8 by adding 8 hours (in milliseconds)
+  const phtOffset = 8 * 60 * 60 * 1000;
+  const phtTime = new Date(now.getTime() + phtOffset);
+
+  // Format as YYYY-MM-DD HH:MM:SS
+  const yyyy = phtTime.getFullYear();
+  const mm = String(phtTime.getMonth() + 1).padStart(2, '0');
+  const dd = String(phtTime.getDate()).padStart(2, '0');
+  const hh = String(phtTime.getHours()).padStart(2, '0');
+  const min = String(phtTime.getMinutes()).padStart(2, '0');
+  const ss = String(phtTime.getSeconds()).padStart(2, '0');
+
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+}
+
 
     async function onScanSuccess(decodedText) {
       try {
