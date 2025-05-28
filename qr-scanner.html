@@ -10,22 +10,26 @@
   <div id="result" style="margin-top:20px; font-weight: bold;"></div>
 
   <script>
-    const googleScriptURL = "https://script.google.com/macros/s/AKfycbyf6Q1HR7hQ-wQDxrbECN3KDBjhiglYA1u7rSb_xYBBWUTuak8PpHFE_xElwu29q97w1A/exec"; // Replace this with your deployed script URL
-
+    const googleScriptURL = "https://script.google.com/macros/s/AKfycbyf6Q1HR7hQ-wQDxrbECN3KDBjhiglYA1u7rSb_xYBBWUTuak8PpHFE_xElwu29q97w1A/exec"; // Replace this with your actual script URL
     const scanner = new Html5Qrcode("reader");
 
     function startScanner() {
       scanner.start(
         { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: 250
-        },
+        { fps: 10, qrbox: 250 },
         onScanSuccess,
         (errorMessage) => {
-          // Optionally handle scan errors
+          // Optionally handle scan errors here
         }
       );
+    }
+
+    // Helper function to get PHT time in ISO format
+    function getPHTTimestamp() {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const pht = new Date(utc + 8 * 3600000); // UTC +8
+      return pht.toISOString().replace("T", " ").slice(0, 19); // "YYYY-MM-DD HH:MM:SS"
     }
 
     async function onScanSuccess(decodedText) {
@@ -44,18 +48,16 @@
             idNumber: data.idNumber,
             firstName: data.firstName,
             lastName: data.lastName,
-            timestamp: new Date().toISOString()
+            timestamp: getPHTTimestamp()
           })
         });
 
-        // Pause scanning briefly and then restart
-        await scanner.stop(); // Stop current scanning session
-
+        // Pause and restart
+        await scanner.stop();
         setTimeout(() => {
           document.getElementById("result").innerText = "";
-          startScanner(); // Restart scanner after short delay
-        }, 2000); // 2-second pause to show scan result
-
+          startScanner();
+        }, 2000);
       } catch (err) {
         console.error("Error processing QR code:", err);
       }
@@ -66,4 +68,3 @@
   </script>
 </body>
 </html>
-
