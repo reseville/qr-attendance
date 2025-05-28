@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QR Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <h2>QR Code Generator</h2>
+  <input type="text" id="idNumber" placeholder="ID Number"><br>
+  <input type="text" id="firstName" placeholder="First Name"><br>
+  <input type="text" id="lastName" placeholder="Last Name"><br>
+  <button onclick="generateQR()">Generate QR</button>
+  <div id="qrcode" style="margin-top:20px;"></div>
+
+  <script>
+    function generateQR() {
+      const idNumber = document.getElementById("idNumber").value;
+      const firstName = document.getElementById("firstName").value;
+      const lastName = document.getElementById("lastName").value;
+
+      const qrData = JSON.stringify({ idNumber, firstName, lastName });
+
+      document.getElementById("qrcode").innerHTML = "";
+      new QRCode(document.getElementById("qrcode"), qrData);
+    }
+  </script>
+</body>
+</html>
+
