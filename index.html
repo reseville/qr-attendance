@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QR Attendance Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+  <h2>Scan QR to Log Attendance</h2>
+  <div id="reader" style="width:300px;"></div>
+  <div id="result" style="margin-top:20px; font-weight: bold;"></div>
+
+  <script>
+    const googleScriptURL = "https://script.google.com/macros/s/AKfycbyf6Q1HR7hQ-wQDxrbECN3KDBjhiglYA1u7rSb_xYBBWUTuak8PpHFE_xElwu29q97w1A/exec"; // Replace this with your deployed script URL
+
+    const scanner = new Html5Qrcode("reader");
+
+    function startScanner() {
+      scanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: 250
+        },
+        onScanSuccess,
+        (errorMessage) => {
+          // Optionally handle scan errors
+        }
+      );
+    }
+
+    async function onScanSuccess(decodedText) {
+      try {
+        const data = JSON.parse(decodedText);
+
+        document.getElementById("result").innerText =
+          `Scanned: ID# ${data.idNumber} - ${data.firstName} ${data.lastName}`;
+
+        // Send to Google Sheets
+        await fetch(googleScriptURL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idNumber: data.idNumber,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        // Pause scanning briefly and then restart
+        await scanner.stop(); // Stop current scanning session
+
+        setTimeout(() => {
+          document.getElementById("result").innerText = "";
+          startScanner(); // Restart scanner after short delay
+        }, 2000); // 2-second pause to show scan result
+
+      } catch (err) {
+        console.error("Error processing QR code:", err);
+      }
+    }
+
+    // Start scanning on load
+    startScanner();
+  </script>
+</body>
+</html>
+
