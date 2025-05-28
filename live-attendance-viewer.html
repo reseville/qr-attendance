@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Attendance Viewer</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h2>Live Attendance Records</h2>
+  <table id="attendance-table">
+    <thead>
+      <tr>
+        <th>ID Number</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbw8QaPUicFk7bDIwbOUIL_h_8XGN1QdYCG7yvqLL5_T01eDPAinsFY4tUSTnNBPwAUZ/exec"; // Replace with your Google Apps Script Web App URL
+
+    async function fetchData() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        const tbody = document.querySelector("#attendance-table tbody");
+        tbody.innerHTML = "";
+
+        data.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.idNumber || ""}</td>
+            <td>${row.firstName || ""}</td>
+            <td>${row.lastName || ""}</td>
+            <td>${row.timestamp || ""}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    }
+
+    // Fetch every 2 seconds
+    setInterval(fetchData, 2000);
+    fetchData(); // Initial load
+  </script>
+</body>
+</html>
