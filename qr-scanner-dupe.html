@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QR Attendance Scanner with Duplicate Detection</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+  <h2>Scan QR to Log Attendance</h2>
+  <div id="reader" style="width:300px;"></div>
+  <div id="result" style="margin-top:20px; font-weight: bold;"></div>
+
+  <script>
+    const googleScriptURL = "https://script.google.com/macros/s/AKfycbyf6Q1HR7hQ-wQDxrbECN3KDBjhiglYA1u7rSb_xYBBWUTuak8PpHFE_xElwu29q97w1A/exec"; // Replace this with your actual URL
+    const scanner = new Html5Qrcode("reader");
+    const scannedIDs = new Set();
+
+    function startScanner() {
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        (errorMessage) => {
+          // Optionally handle scan errors
+        }
+      );
+    }
+
+    function getPHTTimestamp() {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const pht = new Date(utc + 8 * 3600000);
+      return pht.toISOString().replace("T", " ").slice(0, 19);
+    }
+
+    async function onScanSuccess(decodedText) {
+      try {
+        const data = JSON.parse(decodedText);
+        const id = data.idNumber;
+        const fullName = `${data.firstName} ${data.lastName}`;
+
+        // Duplicate check
+        if (scannedIDs.has(id)) {
+          document.getElementById("result").innerText = `⚠️ Duplicate: ${id} - ${fullName}`;
+        } else {
+          scannedIDs.add(id);
+
+          document.getElementById("result").innerText = `✅ Scanned: ${id} - ${fullName}`;
+
+          // Send to Google Sheets
+          await fetch(googleScriptURL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idNumber: id,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              timestamp: getPHTTimestamp()
+            })
+          });
+        }
+
+        // Restart scanner after short delay
+        await scanner.stop();
+        setTimeout(() => {
+          document.getElementById("result").innerText = "";
+          startScanner();
+        }, 2000);
+
+      } catch (err) {
+        console.error("Error processing QR code:", err);
+      }
+    }
+
+    // Start on load
+    startScanner();
+  </script>
+</body>
+</html>
