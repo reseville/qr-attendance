@@ -1,70 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>QR Attendance Scanner</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+<title>QR AttendanceTaker </title>
 </head>
 <body>
-  <h2>Scan QR to Log Attendance</h2>
-  <div id="reader" style="width:300px;"></div>
-  <div id="result" style="margin-top:20px; font-weight: bold;"></div>
 
-  <script>
-    const googleScriptURL = "https://script.google.com/macros/s/AKfycbyf6Q1HR7hQ-wQDxrbECN3KDBjhiglYA1u7rSb_xYBBWUTuak8PpHFE_xElwu29q97w1A/exec"; // Replace this with your actual script URL
-    const scanner = new Html5Qrcode("reader");
+<h1>List of the Links</h1>
+<p>The links is a site url with coresponding functions</p>
 
-    function startScanner() {
-      scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        onScanSuccess,
-        (errorMessage) => {
-          // Optionally handle scan errors here
-        }
-      );
-    }
 
-    // Helper function to get PHT time in ISO format
-    function getPHTTimestamp() {
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-      const pht = new Date(utc + 8 * 3600000); // UTC +8
-      return pht.toISOString().replace("T", " ").slice(0, 19); // "YYYY-MM-DD HH:MM:SS"
-    }
+<a href="https://reseville.github.io/qr-attendance/qr-generator.html">QR Generator</a> : This facility provides generation of QR Code with the information of the attendees. ID Number, FirstName, LastName
 
-    async function onScanSuccess(decodedText) {
-      try {
-        const data = JSON.parse(decodedText);
+<p><a href="https://reseville.github.io/qr-attendance/live-attendance-viewer.html">Live Attendance Viewer</a>: This facility provides a live view of the actual records of attendance once the QR is successfully scanned.
+</p>
 
-        document.getElementById("result").innerText =
-          `Scanned: ID# ${data.idNumber} - ${data.firstName} ${data.lastName}`;
+<p><a href="https://reseville.github.io/qr-attendance/qr-scanner.html">1st version of QR Scanner</a>: This facility Scanned the QR and save the information to backend. this version donot have dedupe checking capability.
+</p> 
 
-        // Send to Google Sheets
-        await fetch(googleScriptURL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            idNumber: data.idNumber,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            timestamp: getPHTTimestamp()
-          })
-        });
+<p><a href="https://reseville.github.io/qr-attendance/qr-scanner-dupe.html">2nd version of QR Scanner</a>: This facility Scanned the QR and save the information to backend with duplicate checking capability.
+</p>  
 
-        // Pause and restart
-        await scanner.stop();
-        setTimeout(() => {
-          document.getElementById("result").innerText = "";
-          startScanner();
-        }, 2000);
-      } catch (err) {
-        console.error("Error processing QR code:", err);
-      }
-    }
-
-    // Start scanning on load
-    startScanner();
-  </script>
 </body>
 </html>
