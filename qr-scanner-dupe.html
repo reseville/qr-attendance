@@ -1,60 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Attendance Scanner</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+  <title>QR Attendance Scanner with Duplicate Detection</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>QR Attendance Scanner</h1>
-            <nav>
-                <a href="index.html">Home</a>
-                <a href="qr-generator.html">Generate QR</a>
-                <a href="qr-scanner.html" class="active">Scan QR</a>
-            </nav>
-        </header>
+  <h2>Scan QR to Log Attendance</h2>
+  <div id="reader" style="width:500px;"></div>
+  <div id="result" style="margin-top:40px; font-weight: bold;"></div>
 
-        <main>
-            <div class="scanner-container">
-                <div class="video-container">
-                    <video id="preview"></video>
-                </div>
-                
-                <div class="controls">
-                    <select id="camera-select" class="form-control">
-                        <option value="" disabled selected>Select Camera</option>
-                    </select>
-                    <button id="start-scan" class="btn">Start Scanning</button>
-                    <button id="stop-scan" class="btn btn-secondary">Stop Scanning</button>
-                </div>
+  <script>
+    const googleScriptURL = "https://script.google.com/macros/s/AKfycbyf6Q1HR7hQ-wQDxrbECN3KDBjhiglYA1u7rSb_xYBBWUTuak8PpHFE_xElwu29q97w1A/exec"; // Replace this with your actual URL
+    const scanner = new Html5Qrcode("reader");
+    const scannedIDs = new Set();
 
-                <div class="manual-entry">
-                    <input type="text" id="manual-id" placeholder="Or enter ID manually">
-                    <button id="manual-submit" class="btn">Submit</button>
-                </div>
-                
-                <div id="feedback" class="feedback"></div>
-            </div>
+    function startScanner() {
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        (errorMessage) => {
+          // Optionally handle scan errors
+        }
+      );
+    }
 
-            <div class="results-container">
-                <h2>Scanned IDs <span id="count">(0)</span></h2>
-                <div class="results-actions">
-                    <button id="clear-results" class="btn btn-danger">Clear All</button>
-                    <button id="download-csv" class="btn btn-primary">Download CSV</button>
-                </div>
-                <ul id="scanned-list" class="scanned-list"></ul>
-            </div>
-        </main>
+function getPHTTimestamp() {
+  const now = new Date();
+  // Convert to UTC+8 by adding 8 hours (in milliseconds)
+  const phtOffset = 8 * 60 * 60 * 1000;
+  const phtTime = new Date(now.getTime() + phtOffset);
 
-        <footer>
-            <p>QR Attendance System &copy; 2025</p>
-        </footer>
-    </div>
+  // Format as YYYY-MM-DD HH:MM:SS
+  const yyyy = phtTime.getFullYear();
+  const mm = String(phtTime.getMonth() + 1).padStart(2, '0');
+  const dd = String(phtTime.getDate()).padStart(2, '0');
+  const hh = String(phtTime.getHours()).padStart(2, '0');
+  const min = String(phtTime.getMinutes()).padStart(2, '0');
+  const ss = String(phtTime.getSeconds()).padStart(2, '0');
 
-    <script src="js/qr-scanner.js"></script>
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+}
+
+
+    async function onScanSuccess(decodedText) {
+      try {
+        const data = JSON.parse(decodedText);
+        const id = data.idNumber;
+        const fullName = `${data.firstName} ${data.lastName}`;
+
+        // Duplicate check
+        if (scannedIDs.has(id)) {
+          document.getElementById("result").innerText = `⚠️ Duplicate: ${id} - ${fullName}`;
+        } else {
+          scannedIDs.add(id);
+
+          document.getElementById("result").innerText = `✅ Scanned: ${id} - ${fullName}`;
+
+          // Send to Google Sheets
+          await fetch(googleScriptURL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idNumber: id,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              timestamp: getPHTTimestamp()
+            })
+          });
+        }
+
+        // Restart scanner after short delay
+        await scanner.stop();
+        setTimeout(() => {
+          document.getElementById("result").innerText = "";
+          startScanner();
+        }, 2000);
+
+      } catch (err) {
+        console.error("Error processing QR code:", err);
+      }
+    }
+
+    // Start on load
+    startScanner();
+  </script>
 </body>
 </html>

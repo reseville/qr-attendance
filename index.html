@@ -1,85 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Attendance Scanner</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="js/scanner.js" defer></script>
+<title>QR AttendanceTaker </title>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>QR Attendance Scanner</h1>
-            <nav>
-                <a href="index.html">Home</a>
-                <a href="qr-generator.html">Generate QR</a>
-            </nav>
-        </header>
-        
-        <main>
-            <div class="scanner-controls">
-                <div class="toggle-container">
-                    <label class="switch">
-                        <input type="checkbox" id="duplicateDetection" checked>
-                        <span class="slider round"></span>
-                    </label>
-                    <span>Detect Duplicates</span>
-                </div>
-                
-                <select id="cameraSelect" class="camera-select">
-                    <option value="">Select Camera</option>
-                </select>
-                
-                <button id="startScan" class="btn primary">Start Scanner</button>
-                <button id="stopScan" class="btn secondary" disabled>Stop Scanner</button>
-            </div>
-            
-            <div class="scanner-container">
-                <div class="feedback-message" id="feedback"></div>
-                <video id="scanner" class="hidden"></video>
-                <canvas id="scannerCanvas" class="hidden"></canvas>
-                <div id="scannerPlaceholder" class="scanner-placeholder">
-                    Click "Start Scanner" to begin
-                </div>
-            </div>
-            
-            <div class="manual-entry">
-                <h3>Manual Entry</h3>
-                <div class="input-group">
-                    <input type="text" id="manualId" placeholder="Enter ID manually">
-                    <button id="addManual" class="btn">Add</button>
-                </div>
-            </div>
-            
-            <div class="results-container">
-                <div class="results-header">
-                    <h3>Scanned IDs (<span id="scanCount">0</span>)</h3>
-                    <div class="actions">
-                        <button id="clearAll" class="btn danger">Clear All</button>
-                        <button id="exportCSV" class="btn secondary">Export CSV</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table id="resultsTable">
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>ID</th>
-                                <th>Time</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="results"></tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-        
-        <footer>
-            <p>QR Attendance System &copy; 2025</p>
-        </footer>
-    </div>
+
+<h1>List of the Links</h1>
+<p>The links is a site url with coresponding functions</p>
+
+
+<a href="https://reseville.github.io/qr-attendance/qr-generator.html">QR Generator</a> : This facility provides generation of QR Code with the information of the attendees. ID Number, FirstName, LastName
+
+<p><a href="https://docs.google.com/spreadsheets/d/1hXdPHjU08g-y03ue1l1_YXtCiKej-YFZNi4Xu6ctlis/edit?usp=sharing">Live Attendance Viewer</a>: This facility provides a live view of the actual records of attendance once the QR is successfully scanned.
+</p>
+
+<p><a href="https://reseville.github.io/qr-attendance/qr-scanner.html">1st version of QR Scanner</a>: This facility Scanned the QR and save the information to backend. this version donot have dedupe checking capability.
+</p> 
+
+<p><a href="https://reseville.github.io/qr-attendance/qr-scanner-dupe.html">2nd version of QR Scanner</a>: This facility Scanned the QR and save the information to backend with duplicate checking capability.
+</p>  
+
 </body>
 </html>
