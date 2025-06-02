@@ -1,29 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>QR Generator</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="[https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>](https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>)
 </head>
 <body>
-  <h2>QR Code Generator</h2>
-  <input type="text" id="idNumber" placeholder="ID Number"><br>
-  <input type="text" id="firstName" placeholder="First Name"><br>
-  <input type="text" id="lastName" placeholder="Last Name"><br>
-  <button onclick="generateQR()">Generate QR</button>
-  <div id="qrcode" style="margin-top:20px;"></div>
+    <div class="container">
+        <header>
+            <h1>QR Code Generator</h1>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="qr-generator.html" class="active">Generate QR</a>
+                <a href="qr-scanner.html">Scan QR</a>
+            </nav>
+        </header>
 
-  <script>
-    function generateQR() {
-      const idNumber = document.getElementById("idNumber").value;
-      const firstName = document.getElementById("firstName").value;
-      const lastName = document.getElementById("lastName").value;
-
-      const qrData = JSON.stringify({ idNumber, firstName, lastName });
-
-      document.getElementById("qrcode").innerHTML = "";
-      new QRCode(document.getElementById("qrcode"), qrData);
-    }
-  </script>
-</body>
-</html>
-
+        <main class="single-column">
+            <div class="generator-container">
+                <div class="form-section">
+                    <h2>Generate Attendance QR Code</h2>
+                    <form id="qr-form">
+                        <div class="form-group">
+                            <label for="student-id">Student/Employee ID:</label>
+                            <input type="text" id="student-id" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="name">Name:</label>
+                            <input type="text" id="name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="additional-info">Additional Information:</label>
+                            <textarea id="additional-info"></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn">Generate QR Code</button>
+                            <button type="button" id="clear-form" class="btn btn-secondary">Clear Form</button>
