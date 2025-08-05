@@ -3,15 +3,102 @@
 <head>
   <title>QR Attendance Scanner</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+    }
+    h2 {
+      margin-top: 32px;
+      font-size: 2rem;
+      text-align: center;
+    }
+    #reader {
+      width: 100vw;
+      max-width: 420px;
+      min-width: 240px;
+      aspect-ratio: 1/1;
+      margin: 32px auto 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #result {
+      margin-top: 28px;
+      font-size: 1.2rem;
+      word-break: break-word;
+      text-align: center;
+      color: #1a7f37;
+    }
+    #latest-scans {
+      margin-top: 40px;
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      padding: 12px 8px 8px 8px;
+    }
+    #latest-scans h3 {
+      margin: 0 0 10px 0;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+    #latest-scans ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #latest-scans li {
+      padding: 4px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 1rem;
+      text-align: center;
+    }
+    #latest-scans li:last-child {
+      border-bottom: none;
+    }
+    @media (max-width: 600px) {
+      h2 {
+        font-size: 1.2rem;
+      }
+      #reader {
+        max-width: 98vw;
+        min-width: 160px;
+      }
+      #result {
+        font-size: 1rem;
+      }
+      #latest-scans {
+        max-width: 98vw;
+      }
+    }
+  </style>
 </head>
 <body>
   <h2>Scan QR to Log Attendance</h2>
-  <div id="reader" style="width:300px;"></div>
-  <div id="result" style="margin-top:20px; font-weight: bold;"></div>
+  <div id="reader"></div>
+  <div id="result"></div>
+  <div id="latest-scans">
+    <h3>Latest 5 Scanned</h3>
+    <ul id="latest-list"></ul>
+  </div>
 
   <script>
     const googleScriptURL = "https://script.google.com/macros/s/AKfycbyf6Q1HR7hQ-wQDxrbECN3KDBjhiglYA1u7rSb_xYBBWUTuak8PpHFE_xElwu29q97w1A/exec"; // Replace this with your actual script URL
+    const viewerAPI = "https://script.google.com/macros/s/AKfycbw6PEljVavkJrfw7TlNMxHQENICEQ-zsQSexRRApIGm2Mn1GAZKl9dh72G26_GzM2qZ/exec"; // Use the viewer endpoint for fetching records
     const scanner = new Html5Qrcode("reader");
+    const scannedIDs = new Set();
 
     function startScanner() {
       scanner.start(
@@ -35,36 +122,65 @@
     async function onScanSuccess(decodedText) {
       try {
         const data = JSON.parse(decodedText);
-
-        document.getElementById("result").innerText =
-          `Scanned: ID# ${data.idNumber} - ${data.firstName} ${data.lastName}`;
-
-        // Send to Google Sheets
-        await fetch(googleScriptURL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            idNumber: data.idNumber,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            timestamp: getPHTTimestamp()
-          })
-        });
-
+        const id = data.idNumber;
+        const fullName = `${data.firstName} ${data.lastName}`;
+        // Duplicate check (session-based)
+        if (scannedIDs.has(id)) {
+          document.getElementById("result").innerText = `⚠️ Duplicate: ID# ${id} - ${fullName}`;
+        } else {
+          scannedIDs.add(id);
+          document.getElementById("result").innerText = `✅ Scanned: ID# ${id} - ${fullName}`;
+          // Send to Google Sheets
+          await fetch(googleScriptURL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idNumber: data.idNumber,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              timestamp: getPHTTimestamp()
+            })
+          });
+        }
         // Pause and restart
         await scanner.stop();
         setTimeout(() => {
           document.getElementById("result").innerText = "";
           startScanner();
         }, 2000);
+        // Refresh latest scans after a successful scan
+        setTimeout(fetchLatestScans, 500);
       } catch (err) {
-        console.error("Error processing QR code:", err);
+        document.getElementById("result").innerText = "❌ Invalid QR or Error.";
       }
     }
 
+    // Fetch and display the latest 5 scans
+    async function fetchLatestScans() {
+      try {
+        const res = await fetch(viewerAPI);
+        const data = await res.json();
+        const latest = data.slice(0, 5);
+        const list = document.getElementById("latest-list");
+        list.innerHTML = "";
+        latest.forEach(row => {
+          const name = `${row.firstName || ""} ${row.lastName || ""}`.trim();
+          const id = row.idNumber || "";
+          const ts = row.timestamp || "";
+          const li = document.createElement("li");
+          li.innerText = `${name} (${id})\n${ts}`;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        const list = document.getElementById("latest-list");
+        list.innerHTML = '<li style="color:#b00">Unable to load latest scans.</li>';
+      }
+    }
     // Start scanning on load
     startScanner();
+    fetchLatestScans();
+    setInterval(fetchLatestScans, 3000);
   </script>
 </body>
 </html>
